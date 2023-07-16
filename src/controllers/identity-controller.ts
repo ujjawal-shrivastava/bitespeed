@@ -16,7 +16,7 @@ class Read {}
 class Update {}
 
 class Delete {
-  async one(id: number) {
+  async byId(id: number) {
     return await prismaClient.identity.update({
       where: {
         id,

@@ -11,7 +11,7 @@ class PrismaWrapper {
   }
 
   async connect() {
-    this._client = new PrismaClient();
+    if (!this._client) this._client = new PrismaClient();
     await this.client.$connect();
     console.info('POSTGRES CONNECTED!');
   }

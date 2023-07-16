@@ -1,5 +1,6 @@
 import express, { json, urlencoded } from 'express';
 import appRouter from './routes';
+import { NotFoundError } from './utils';
 
 const app = express();
 
@@ -9,8 +10,7 @@ app.use(urlencoded({ extended: true }));
 app.use(appRouter);
 
 app.all('*', async () => {
-  // TODO custom error methods
-  throw new Error('Route not found');
+  throw new NotFoundError();
 });
 
 // TODO add error handler
