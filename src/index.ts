@@ -1,15 +1,31 @@
-import express from 'express';
 import dotenv from 'dotenv';
+
+import app from './app';
+import { prismaWrapper } from './services';
 
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT;
+const startServer = async () => {
+  try {
+    // TODO env vars check
+    const server = app.listen(process.env.PORT, () => {
+      console.log(`Server listening on port ${process.env.PORT}!`);
+    });
 
-app.get('/', (req, res) => {
-  res.send('Express + TypeScript Server');
-});
+    const cleanup = async () => {
+      server.close(async () => {
+        await prismaWrapper.disconnect();
+        console.info('Server closed!');
+        process.exit();
+      });
+    };
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+startServer();

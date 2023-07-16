@@ -9,3 +9,21 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum LinkPrecedence {
+  primary
+  secondary
+}
+
+model Identity {
+  id             Int            @id @default(autoincrement())
+  phoneNumber    String?
+  email          String?
+  linkedId       Int?
+  linkPrecedence LinkPrecedence @default(primary)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([phoneNumber, email], name: "phoneNumberEmail")
+}
