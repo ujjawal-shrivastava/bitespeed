@@ -1,7 +1,7 @@
 import { FieldValidationError, ValidationError } from 'express-validator';
 
 // * Base custom error
-abstract class CustomError extends Error {
+export abstract class CustomError extends Error {
   abstract statusCode: number;
 
   constructor(message: string) {
@@ -49,3 +49,30 @@ export class RequestValidationError extends CustomError {
 }
 
 // * Bad request error
+export class BadRequestError extends CustomError {
+  statusCode = 400;
+  constructor(
+    public error: { code: string; message: string; description?: string }
+  ) {
+    super(error.message);
+    Object.setPrototypeOf(this, BadRequestError.prototype);
+  }
+
+  serializeErrors() {
+    return [this.error];
+  }
+}
+
+// * Internal error
+export class InternalError extends CustomError {
+  statusCode = 500;
+
+  constructor(message?: string) {
+    super(message || 'Something went wrong!');
+    Object.setPrototypeOf(this, InternalError.prototype);
+  }
+
+  serializeErrors() {
+    return [{ message: this.message || 'Something went wrong!' }];
+  }
+}

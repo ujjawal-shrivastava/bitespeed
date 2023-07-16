@@ -9,7 +9,7 @@ const startServer = async () => {
   try {
     // TODO env vars check
     await prismaWrapper.connect();
-    
+
     const server = app.listen(process.env.PORT, () => {
       console.log(`Server listening on port ${process.env.PORT}!`);
     });

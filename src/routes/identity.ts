@@ -7,10 +7,14 @@ const router = express.Router();
 
 router.post(
   '/',
-  oneOf([
-    body('email').exists().isEmail(),
-    body('phoneNumber').exists().isString().isNumeric(),
-  ]),
+  [
+    oneOf([body('email').exists(), body('phoneNumber').exists()], {
+      message: 'either email or phoneNumber is required',
+    }),
+
+    body('email').optional().isEmail(),
+    body('phoneNumber').optional().isString().isNumeric(),
+  ],
   validateRequest,
   async (req: Request, res: Response) => {
     res.json({ ok: true });

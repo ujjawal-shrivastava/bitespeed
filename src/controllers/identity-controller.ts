@@ -1,4 +1,6 @@
-import { prismaClient } from '../services';
+import { prismaWrapper } from '../services';
+
+const prismaClient = prismaWrapper.client;
 
 class Create {
   async new(phoneNumber?: string, email?: string) {
