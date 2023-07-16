@@ -11,8 +11,8 @@ datasource db {
 }
 
 enum LinkPrecedence {
-  PRIMARY
-  SECONDARY
+  primary
+  secondary
 }
 
 model Contact {
@@ -22,10 +22,12 @@ model Contact {
   linkedId          Int?
   primaryContact    Contact?       @relation("LinkedContact", fields: [linkedId], references: [id])
   secondaryContacts Contact[]      @relation("LinkedContact")
-  linkPrecedence    LinkPrecedence @default(PRIMARY)
+  linkPrecedence    LinkPrecedence @default(primary)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   deletedAt         DateTime?
 
-  @@unique([phoneNumber, email, linkPrecedence], name: "phoneNumberEmailPrecedence")
+  @@unique([phoneNumber, email], name: "phoneNumberEmail")
+  @@index([phoneNumber])
+  @@index([email])
 }

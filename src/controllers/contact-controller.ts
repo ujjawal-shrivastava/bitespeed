@@ -4,10 +4,10 @@ import { prismaWrapper } from '../services';
 import { ContactAttrs, NotAllowedErrors } from '../types';
 import { BadRequestError } from '../utils';
 
-const prismaClient = prismaWrapper.client;
-
 class Create {
   private static async _new(attrs: ContactAttrs) {
+    const prismaClient = prismaWrapper.client;
+
     if (!attrs.email && !attrs.phoneNumber) {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
@@ -30,7 +30,7 @@ class Create {
   ) {
     return await this._new({
       ...attrs,
-      linkPrecedence: LinkPrecedence.PRIMARY,
+      linkPrecedence: LinkPrecedence.primary,
     });
   }
 
@@ -39,7 +39,7 @@ class Create {
   ) {
     return await this._new({
       ...attrs,
-      linkPrecedence: LinkPrecedence.SECONDARY,
+      linkPrecedence: LinkPrecedence.secondary,
     });
   }
 
@@ -48,13 +48,17 @@ class Create {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
 
-    const exisitingPrimary = await Read.exisitingPrimary(phoneNumber, email);
+    const exisiting = await Read.byEmailOrPhone(phoneNumber, email);
 
-    const newContact = exisitingPrimary
+    const isExisitingIdentical =
+      exisiting.email === email && exisiting.phoneNumber === phoneNumber;
+    if (isExisitingIdentical) return exisiting;
+
+    const newContact = exisiting
       ? await this._newSecondary({
           phoneNumber,
           email,
-          linkedId: exisitingPrimary.id,
+          linkedId: exisiting.linkedId ?? exisiting.id,
         })
       : await this._newPrimary({
           phoneNumber,
@@ -66,7 +70,9 @@ class Create {
 }
 
 class Read {
-  static async exisitingPrimary(phoneNumber?: string, email?: string) {
+  static async byEmailOrPhone(phoneNumber?: string, email?: string) {
+    const prismaClient = prismaWrapper.client;
+
     if (!phoneNumber && !email) {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
@@ -74,8 +80,15 @@ class Read {
     return await prismaClient.contact.findFirst({
       where: {
         OR: [{ email }, { phoneNumber }],
-        linkPrecedence: LinkPrecedence.PRIMARY,
         deletedAt: null,
+      },
+      include: {
+        primaryContact: {
+          include: {
+            secondaryContacts: true,
+          },
+        },
+        secondaryContacts: true,
       },
     });
   }
@@ -86,6 +99,8 @@ class Update {}
 class Delete {
   // * soft delete
   static async byId(id: number) {
+    const prismaClient = prismaWrapper.client;
+
     return await prismaClient.contact.update({
       where: {
         id,

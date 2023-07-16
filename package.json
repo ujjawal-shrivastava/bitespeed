@@ -8,7 +8,9 @@
     "tsc": "tsc -p tsconfig.json",
     "build": "npm run tsc",
     "start": "node dist",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate:deploy": "npx prisma migrate deploy"
   },
   "keywords": [],
   "author": "",

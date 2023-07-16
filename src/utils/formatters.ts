@@ -7,25 +7,30 @@ export class Formatters {
     contact: Awaited<ReturnType<typeof contactController.Create.newLinked>>
   ): ContactRes {
     const primaryContact =
-      contact.linkPrecedence === LinkPrecedence.PRIMARY
+      contact.linkPrecedence === LinkPrecedence.primary
         ? contact
         : contact.primaryContact;
 
-    const emails = [primaryContact.email];
-    const phoneNumbers = [primaryContact.phoneNumber];
+    const { id, email, phoneNumber, secondaryContacts } = primaryContact;
+
+    const emails = new Set([]);
+    const phoneNumbers = new Set([]);
     const secondaryContactIds = [];
 
-    primaryContact.secondaryContacts.map((it) => {
-      emails.push(it.email);
-      phoneNumbers.push(it.phoneNumber);
+    email && emails.add(email);
+    phoneNumber && phoneNumbers.add(phoneNumber);
+
+    secondaryContacts.map((it) => {
+      it.email && emails.add(it.email);
+      it.phoneNumber && phoneNumbers.add(it.phoneNumber);
       secondaryContactIds.push(it.id);
     });
 
     return {
       contact: {
-        primaryContatctId: primaryContact.id,
-        emails,
-        phoneNumbers,
+        primaryContatctId: id,
+        emails: [...emails],
+        phoneNumbers: [...phoneNumbers],
         secondaryContactIds,
       },
     };
