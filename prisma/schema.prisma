@@ -11,17 +11,21 @@ datasource db {
 }
 
 enum LinkPrecedence {
-  primary
-  secondary
+  PRIMARY
+  SECONDARY
 }
 
-model Identity {
-  id             Int            @id @default(autoincrement())
-  phoneNumber    String?
-  email          String?
-  linkedId       Int?
-  linkPrecedence LinkPrecedence @default(primary)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  deletedAt      DateTime?
+model Contact {
+  id                Int            @id @default(autoincrement())
+  phoneNumber       String?
+  email             String?
+  linkedId          Int?
+  primaryContact    Contact?       @relation("LinkedContact", fields: [linkedId], references: [id])
+  secondaryContacts Contact[]      @relation("LinkedContact")
+  linkPrecedence    LinkPrecedence @default(PRIMARY)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  @@unique([phoneNumber, email, linkPrecedence], name: "phoneNumberEmailPrecedence")
 }

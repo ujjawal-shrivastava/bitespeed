@@ -1,4 +1,4 @@
-import { FieldValidationError, ValidationError } from 'express-validator';
+import { ValidationError } from 'express-validator';
 
 // * Base custom error
 export abstract class CustomError extends Error {
