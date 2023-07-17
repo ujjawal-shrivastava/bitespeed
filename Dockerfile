@@ -16,5 +16,6 @@ RUN npm install --only=production
 COPY --from=builder /app/dist ./
 COPY ./prisma /app/prisma
 RUN npm run prisma:generate
-EXPOSE 8000
+ARG PORT
+EXPOSE ${PORT}
 CMD ["npm","start:prod"]
