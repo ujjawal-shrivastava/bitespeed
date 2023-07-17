@@ -15,8 +15,6 @@ COPY package*.json ./
 RUN npm install --only=production
 COPY --from=builder /app/dist ./
 COPY ./prisma /app/prisma
-COPY ./.env ./
 RUN npm run prisma:generate
-RUN npm run prisma:migrate:deploy
 EXPOSE 8000
-CMD ["node","./index.js"]
+CMD ["npm","start:prod"]

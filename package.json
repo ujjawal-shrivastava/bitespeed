@@ -10,7 +10,8 @@
     "start": "node dist",
     "lint": "eslint . --ext .ts",
     "prisma:generate": "npx prisma generate",
-    "prisma:migrate:deploy": "npx prisma migrate deploy"
+    "prisma:migrate:deploy": "npx prisma migrate deploy",
+    "start:prod": "npm run prisma:migrate:deploy && node ./index.js"
   },
   "keywords": [],
   "author": "",
