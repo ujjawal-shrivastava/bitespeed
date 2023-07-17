@@ -12,16 +12,37 @@ class Create {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
 
-    return await prismaClient.contact.create({
-      data: attrs,
-      include: {
-        primaryContact: {
+    return await prismaClient.$transaction(async (tx) => {
+      const exisitingIdentical = await tx.contact.findFirst({
+        where: {
+          email: attrs.email,
+          phoneNumber: attrs.phoneNumber,
+        },
+        include: {
+          primaryContact: {
+            include: {
+              secondaryContacts: true,
+            },
+          },
+          secondaryContacts: true,
+        },
+      });
+
+      if (exisitingIdentical) {
+        return exisitingIdentical;
+      } else {
+        return await tx.contact.create({
+          data: attrs,
           include: {
+            primaryContact: {
+              include: {
+                secondaryContacts: true,
+              },
+            },
             secondaryContacts: true,
           },
-        },
-        secondaryContacts: true,
-      },
+        });
+      }
     });
   }
 
@@ -51,7 +72,10 @@ class Create {
     const exisiting = await Read.byEmailOrPhone(phoneNumber, email);
 
     const isExisitingIdentical =
-      exisiting.email === email && exisiting.phoneNumber === phoneNumber;
+      exisiting &&
+      exisiting.email === email &&
+      exisiting.phoneNumber === phoneNumber;
+
     if (isExisitingIdentical) return exisiting;
 
     const newContact = exisiting
