@@ -18,4 +18,4 @@ COPY ./prisma /app/prisma
 RUN npm run prisma:generate
 ARG PORT
 EXPOSE ${PORT}
-CMD ["npm","start:prod"]
+CMD ["npm","run","start:prod"]
