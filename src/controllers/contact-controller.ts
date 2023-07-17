@@ -69,9 +69,10 @@ class Create {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
 
-    const exisitingPrimaryContacts = await Read.primaryByEmailOrPhone(
-      phoneNumber,
-      email
+    const exisitingContacts = await Read.byEmailOrPhone(phoneNumber, email);
+
+    const exisitingPrimaryContacts = exisitingContacts.filter(
+      (it) => it.linkPrecedence === LinkPrecedence.primary
     );
 
     const [first, ...rest] = exisitingPrimaryContacts;
@@ -99,7 +100,7 @@ class Create {
 }
 
 class Read {
-  static async primaryByEmailOrPhone(phoneNumber?: string, email?: string) {
+  static async byEmailOrPhone(phoneNumber?: string, email?: string) {
     const prismaClient = prismaWrapper.client;
 
     if (!phoneNumber && !email) {
@@ -109,8 +110,10 @@ class Read {
     return await prismaClient.contact.findMany({
       where: {
         OR: [{ email }, { phoneNumber }],
-        linkPrecedence: 'primary',
         deletedAt: null,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
   }
