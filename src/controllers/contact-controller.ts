@@ -16,7 +16,7 @@ class Create {
       const exisitingIdentical = await tx.contact.findFirst({
         where: {
           email: attrs.email,
-          phoneNumber: attrs.phoneNumber,
+          phoneNumber: attrs.phoneNumber ?? null,
         },
         include: {
           primaryContact: {
@@ -69,20 +69,25 @@ class Create {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
 
-    const exisiting = await Read.byEmailOrPhone(phoneNumber, email);
+    const exisitingPrimaryContacts = await Read.primaryByEmailOrPhone(
+      phoneNumber,
+      email
+    );
 
-    const isExisitingIdentical =
-      exisiting &&
-      exisiting.email === email &&
-      exisiting.phoneNumber === phoneNumber;
+    const [first, ...rest] = exisitingPrimaryContacts;
 
-    if (isExisitingIdentical) return exisiting;
+    if (rest.length) {
+      await Update.bulkMarkSecondary(
+        rest.map((it) => it.id),
+        first.id
+      );
+    }
 
-    const newContact = exisiting
+    const newContact = first
       ? await this._newSecondary({
           phoneNumber,
           email,
-          linkedId: exisiting.linkedId ?? exisiting.id,
+          linkedId: first.id,
         })
       : await this._newPrimary({
           phoneNumber,
@@ -94,31 +99,39 @@ class Create {
 }
 
 class Read {
-  static async byEmailOrPhone(phoneNumber?: string, email?: string) {
+  static async primaryByEmailOrPhone(phoneNumber?: string, email?: string) {
     const prismaClient = prismaWrapper.client;
 
     if (!phoneNumber && !email) {
       throw new BadRequestError(NotAllowedErrors.emailPhoneRequired);
     }
 
-    return await prismaClient.contact.findFirst({
+    return await prismaClient.contact.findMany({
       where: {
         OR: [{ email }, { phoneNumber }],
+        linkPrecedence: 'primary',
         deletedAt: null,
-      },
-      include: {
-        primaryContact: {
-          include: {
-            secondaryContacts: true,
-          },
-        },
-        secondaryContacts: true,
       },
     });
   }
 }
 
-class Update {}
+class Update {
+  static async bulkMarkSecondary(ids: number[], primaryContactId: number) {
+    const prismaClient = prismaWrapper.client;
+    return await prismaClient.contact.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      data: {
+        linkPrecedence: LinkPrecedence.secondary,
+        linkedId: primaryContactId,
+      },
+    });
+  }
+}
 
 class Delete {
   // * soft delete
