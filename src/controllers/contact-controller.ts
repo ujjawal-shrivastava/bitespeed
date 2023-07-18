@@ -84,11 +84,11 @@ class Create {
       );
     }
 
-    const newContact = first
+    const newContact = exisitingContacts[0]
       ? await this._newSecondary({
           phoneNumber,
           email,
-          linkedId: first.id,
+          linkedId: exisitingContacts[0].linkedId || exisitingContacts[0].id,
         })
       : await this._newPrimary({
           phoneNumber,
